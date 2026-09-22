@@ -105,6 +105,37 @@ class TestSortingAlgorithms(unittest.TestCase):
                 ids = [s.student_id for s in result]
                 self.assertEqual(ids, expected)
 
+    def test_trace_disabled_by_default(self) -> None:
+        """Verify that trace is empty when not requested (backward compatibility)."""
+        for name, algo in self.algorithms:
+            with self.subTest(algorithm=name):
+                _, metrics = algo(self.sample_numbers)
+                self.assertEqual(metrics.traces, [])
+
+    def test_trace_enabled_generates_steps(self) -> None:
+        """Verify that all sorting algorithms generate descriptive trace steps when trace=True."""
+        for name, algo in self.algorithms:
+            with self.subTest(algorithm=name):
+                result, metrics = algo(self.sample_numbers, trace=True)
+                self.assertEqual(result, self.sorted_numbers)
+                self.assertIsInstance(metrics.traces, list)
+                self.assertGreater(len(metrics.traces), 0)
+                # First trace step should indicate beginning
+                self.assertTrue(any("เริ่มต้น" in step for step in metrics.traces))
+
+    def test_trace_edge_cases(self) -> None:
+        """Verify trace does not crash on empty and single-element inputs."""
+        for name, algo in self.algorithms:
+            with self.subTest(algorithm=name, case="empty"):
+                result, metrics = algo([], trace=True)
+                self.assertEqual(result, [])
+                self.assertIsInstance(metrics.traces, list)
+
+            with self.subTest(algorithm=name, case="single"):
+                result, metrics = algo([42], trace=True)
+                self.assertEqual(result, [42])
+                self.assertIsInstance(metrics.traces, list)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -131,6 +131,39 @@ class TestScoreManagerService(unittest.TestCase):
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0].name, "Wannisa Ploydee")
 
+    def test_sort_students_trace(self) -> None:
+        """Verify ScoreManager forwards trace flag to all sorting algorithms."""
+        self.manager.load_sample_data()
+        for algo in ["bubble", "insertion", "selection", "merge"]:
+            with self.subTest(algorithm=algo):
+                _, metrics = self.manager.sort_students(algo, key_field="score", trace=True)
+                self.assertGreater(len(metrics.traces), 0)
+
+    def test_search_students_trace(self) -> None:
+        """Verify ScoreManager forwards trace flag to sequential and binary search."""
+        self.manager.load_sample_data()
+        # Sequential search trace
+        _, seq_metrics = self.manager.search_students(
+            "sequential", "6601003", key_field="student_id", trace=True
+        )
+        self.assertGreater(len(seq_metrics.traces), 0)
+
+        # Binary search trace
+        self.manager.sort_students("merge", key_field="student_id", update_state=True)
+        _, bin_metrics = self.manager.search_students(
+            "binary", "6601003", key_field="student_id", trace=True
+        )
+        self.assertGreater(len(bin_metrics.traces), 0)
+
+    def test_benchmark_sorting_not_affected_by_trace(self) -> None:
+        """Verify benchmark maintains clean metrics and empty trace lists."""
+        self.manager.load_sample_data()
+        results = self.manager.benchmark_sorting(key_field="score")
+        for name, metrics in results.items():
+            self.assertEqual(metrics.traces, [], f"Benchmark for {name} should not retain traces")
+            self.assertGreater(metrics.comparisons, 0)
+            self.assertGreaterEqual(metrics.swaps, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

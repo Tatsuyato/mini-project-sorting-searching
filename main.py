@@ -57,6 +57,18 @@ def display_searching_metrics(metrics: SearchMetrics) -> None:
     print("-" * 50)
 
 
+def display_trace(traces: List[str], title: str = "ขั้นตอนการทำงาน (Algorithm Trace)") -> None:
+    """Print step-by-step execution trace clearly."""
+    if not traces:
+        return
+    print("\n" + "." * 65)
+    print(f"  {title}")
+    print("." * 65)
+    for step in traces:
+        print(f"  {step}")
+    print("." * 65)
+
+
 def handle_add_student(manager: ScoreManager) -> None:
     print_header("เพิ่มข้อมูลนักเรียนใหม่")
     student_id = input("กรอกรหัสนักเรียน (เช่น 6601015): ").strip()
@@ -141,7 +153,10 @@ def handle_sorting(manager: ScoreManager) -> None:
     else:
         reverse = (order_choice == "2")
 
-    update_choice = input("\nต้องการบันทึกผลการจัดเรียงนี้เป็นลำดับหลักของระบบหรือไม่? (y/N): ").strip().lower()
+    trace_choice = input("ต้องการแสดงขั้นตอนการทำงานจริง (Trace) หรือไม่? (Y/n) [ค่าเริ่มต้น: Y]: ").strip().lower()
+    show_trace = (trace_choice != "n")
+
+    update_choice = input("ต้องการบันทึกผลการจัดเรียงนี้เป็นลำดับหลักของระบบหรือไม่? (y/N): ").strip().lower()
     update_state = (update_choice == "y")
 
     sorted_list, metrics = manager.sort_students(
@@ -149,7 +164,11 @@ def handle_sorting(manager: ScoreManager) -> None:
         key_field=key_field,
         reverse=reverse,
         update_state=update_state,
+        trace=show_trace,
     )
+
+    if show_trace and metrics.traces:
+        display_trace(metrics.traces, f"ขั้นตอนการทำงานจริง (Trace): {metrics.algorithm_name}")
 
     direction_str = "มากไปน้อย" if reverse else "น้อยไปมาก"
     print_table(sorted_list, caption=f"ผลลัพธ์จัดเรียงด้วย {metrics.algorithm_name} (เรียงตาม {key_field} แบบ{direction_str})")
@@ -190,8 +209,15 @@ def handle_searching(manager: ScoreManager) -> None:
         print("[!] คำค้นหาต้องไม่เป็นค่าว่าง")
         return
 
+    trace_choice = input("ต้องการแสดงลำดับขั้นตอนการตรวจสอบ (Trace) หรือไม่? (Y/n) [ค่าเริ่มต้น: Y]: ").strip().lower()
+    show_trace = (trace_choice != "n")
+
     if search_algo_choice == "1":
-        matched, metrics = manager.search_students("sequential", query_val, key_field=key_field)
+        matched, metrics = manager.search_students(
+            "sequential", query_val, key_field=key_field, trace=show_trace
+        )
+        if show_trace and metrics.traces:
+            display_trace(metrics.traces, f"ลำดับขั้นตอนการตรวจสอบ (Sequential Search Trace): '{query_val}'")
         print_table(matched, caption=f"ผลการค้นหา Sequential Search: '{query_val}'")
         display_searching_metrics(metrics)
 
@@ -216,8 +242,10 @@ def handle_searching(manager: ScoreManager) -> None:
         reverse_flag = is_desc_sorted and not is_asc_sorted
         try:
             matched, metrics = manager.search_students(
-                "binary", query_val, key_field=key_field, reverse=reverse_flag
+                "binary", query_val, key_field=key_field, reverse=reverse_flag, trace=show_trace
             )
+            if show_trace and metrics.traces:
+                display_trace(metrics.traces, f"ลำดับขั้นตอนการตรวจสอบ (Binary Search Trace): '{query_val}'")
             print_table(matched, caption=f"ผลการค้นหา Binary Search: '{query_val}'")
             display_searching_metrics(metrics)
         except ValueError as err:

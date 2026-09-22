@@ -122,6 +122,43 @@ class TestSearchingAlgorithms(unittest.TestCase):
         self.assertEqual(idx, 3)
         self.assertEqual(students[idx].name, "David")
 
+    def test_sequential_search_trace(self) -> None:
+        """Verify sequential search trace output."""
+        # Default: no trace
+        _, metrics = sequential_search(self.sorted_numbers, 40)
+        self.assertEqual(metrics.traces, [])
+
+        # Trace enabled: found
+        indices, metrics = sequential_search(self.sorted_numbers, 40, trace=True)
+        self.assertEqual(indices, [3])
+        self.assertGreater(len(metrics.traces), 0)
+        self.assertTrue(any("พบข้อมูลที่ตรงกัน" in s for s in metrics.traces))
+        self.assertTrue(any("สรุป:" in s for s in metrics.traces))
+
+    def test_binary_search_trace(self) -> None:
+        """Verify binary search trace output for both found and not-found cases."""
+        # Default: no trace
+        _, metrics = binary_search(self.sorted_numbers, 50)
+        self.assertEqual(metrics.traces, [])
+
+        # Trace enabled: found
+        idx, metrics = binary_search(self.sorted_numbers, 50, trace=True)
+        self.assertEqual(idx, 4)
+        self.assertGreater(len(metrics.traces), 0)
+        self.assertTrue(any("พบข้อมูลที่ Index" in s for s in metrics.traces))
+        self.assertTrue(any("Mid=" in s for s in metrics.traces))
+
+        # Trace enabled: not found
+        idx, metrics = binary_search(self.sorted_numbers, 999, trace=True)
+        self.assertIsNone(idx)
+        self.assertTrue(any("สิ้นสุดการค้นหา: ไม่พบค่า" in s for s in metrics.traces))
+
+    def test_sequential_search_trace_truncation(self) -> None:
+        """Verify trace compacting when sequence length exceeds max_trace_lines."""
+        large_list = list(range(30))
+        _, metrics = sequential_search(large_list, 999, trace=True, max_trace_lines=10)
+        self.assertTrue(any("ย่อการแสดงผล" in s for s in metrics.traces))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -95,6 +95,7 @@ class ScoreManager:
         key_field: str = "score",
         reverse: bool = False,
         update_state: bool = False,
+        trace: bool = False,
     ) -> Tuple[List[Student], SortMetrics]:
         """Sort students using the specified algorithm.
 
@@ -103,6 +104,7 @@ class ScoreManager:
             key_field: 'score', 'student_id', or 'name'
             reverse: True for descending, False for ascending
             update_state: If True, updates internal list with the sorted list
+            trace: If True, records step-by-step execution trace
 
         Returns:
             Tuple of (sorted_list, SortMetrics)
@@ -111,13 +113,21 @@ class ScoreManager:
         algo = algorithm.strip().lower()
 
         if algo == "bubble":
-            sorted_list, metrics = bubble_sort(self._students, key=key_func, reverse=reverse)
+            sorted_list, metrics = bubble_sort(
+                self._students, key=key_func, reverse=reverse, trace=trace
+            )
         elif algo == "insertion":
-            sorted_list, metrics = insertion_sort(self._students, key=key_func, reverse=reverse)
+            sorted_list, metrics = insertion_sort(
+                self._students, key=key_func, reverse=reverse, trace=trace
+            )
         elif algo == "selection":
-            sorted_list, metrics = selection_sort(self._students, key=key_func, reverse=reverse)
+            sorted_list, metrics = selection_sort(
+                self._students, key=key_func, reverse=reverse, trace=trace
+            )
         elif algo == "merge":
-            sorted_list, metrics = merge_sort(self._students, key=key_func, reverse=reverse)
+            sorted_list, metrics = merge_sort(
+                self._students, key=key_func, reverse=reverse, trace=trace
+            )
         else:
             raise ValueError(
                 f"Unknown sorting algorithm '{algorithm}'. "
@@ -135,6 +145,7 @@ class ScoreManager:
         query: Any,
         key_field: str = "student_id",
         reverse: bool = False,
+        trace: bool = False,
     ) -> Tuple[List[Student], SearchMetrics]:
         """Search students using Sequential Search or Binary Search.
 
@@ -143,6 +154,7 @@ class ScoreManager:
             query: The target value (ID, name, or score)
             key_field: 'student_id', 'name', or 'score'
             reverse: Sort direction if using binary search on reverse sorted list
+            trace: If True, records step-by-step examination trace
 
         Returns:
             Tuple of (matched_students, SearchMetrics)
@@ -159,7 +171,9 @@ class ScoreManager:
                 raise ValueError(f"Score search query must be a valid number, got '{query}'.")
 
         if algo == "sequential":
-            indices, metrics = sequential_search(self._students, target_val, key=key_func)
+            indices, metrics = sequential_search(
+                self._students, target_val, key=key_func, trace=trace
+            )
             matched = [self._students[i] for i in indices]
             return matched, metrics
 
@@ -171,6 +185,7 @@ class ScoreManager:
                 key=key_func,
                 reverse=reverse,
                 validate_sorted=True,
+                trace=trace,
             )
             matched = [self._students[idx]] if idx is not None else []
             return matched, metrics
