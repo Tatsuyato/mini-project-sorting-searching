@@ -1,19 +1,21 @@
 """Service layer managing the student score collection and algorithm coordination."""
 from typing import Any, Callable, Dict, List, Optional, Tuple
-from models.student import Student
+
+from algorithms.searching import (
+    SearchMetrics,
+    binary_search,
+    is_sorted,
+    sequential_search,
+)
 from algorithms.sorting import (
     SortMetrics,
     bubble_sort,
     insertion_sort,
-    selection_sort,
     merge_sort,
+    selection_sort,
 )
-from algorithms.searching import (
-    SearchMetrics,
-    sequential_search,
-    binary_search,
-    is_sorted,
-)
+from models.student import Student
+from services.mock_data import DEFAULT_MOCK_COUNT, generate_mock_students
 
 
 class ScoreManager:
@@ -74,6 +76,15 @@ class ScoreManager:
             Student("6601012", "Teerapat Boonsri", 42.5),
         ]
         self._students = samples
+        return len(self._students)
+
+    def load_mock_data(self, count: int = DEFAULT_MOCK_COUNT) -> int:
+        """Populate the manager with synthetic/mock student records for demonstrations.
+
+        Uses purely synthetic IDs (e.g. TEST0001) and synthetic names (e.g. นักเรียนทดสอบ 001)
+        simulating student group structures without any real personal data.
+        """
+        self._students = generate_mock_students(count)
         return len(self._students)
 
     @staticmethod

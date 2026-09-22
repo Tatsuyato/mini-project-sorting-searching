@@ -4,12 +4,14 @@ Demonstrates:
 - Sorting Algorithms: Bubble Sort, Insertion Sort, Selection Sort, Merge Sort
 - Searching Algorithms: Sequential Search, Binary Search
 """
+import argparse
 import sys
 from typing import List, Optional
+
+from algorithms.searching import SearchMetrics
+from algorithms.sorting import SortMetrics
 from models.student import Student
 from services.score_manager import ScoreManager
-from algorithms.sorting import SortMetrics
-from algorithms.searching import SearchMetrics
 
 
 def print_header(title: str) -> None:
@@ -290,11 +292,45 @@ def print_main_menu() -> None:
     print("=" * 65)
 
 
-def main() -> None:
+def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
+    """Parse CLI arguments for demo options and mock data mode."""
+    parser = argparse.ArgumentParser(
+        description="ระบบจัดการคะแนนนักเรียน - Sorting & Searching Demo (Python)"
+    )
+    parser.add_argument(
+        "-data-test",
+        "--data-test",
+        "--mock-data",
+        "--mock",
+        action="store_true",
+        dest="mock_data",
+        help="โหลดชุดข้อมูลสังเคราะห์จำลองสำหรับการสาธิต (Synthetic Mock Data / Test Data)",
+    )
+    parser.add_argument(
+        "--mock-count",
+        type=int,
+        default=35,
+        dest="mock_count",
+        help="จำนวนข้อมูลจำลองที่ต้องการสร้างในโหมด Mock Data (ค่าเริ่มต้น: 35 รายการ)",
+    )
+    return parser.parse_args(args)
+
+
+def main(argv: Optional[List[str]] = None) -> None:
+    args = parse_args(argv)
     manager = ScoreManager()
-    # Pre-load sample data for immediate demo readiness
-    manager.load_sample_data()
-    print("\n[i] เริ่มต้นระบบและโหลดชุดข้อมูลตัวอย่างเรียบร้อยแล้ว (12 รายการ)")
+    is_mock_mode = bool(args.mock_data)
+
+    if is_mock_mode:
+        loaded_count = manager.load_mock_data(args.mock_count)
+        print(
+            f"\n[i] เริ่มต้นระบบในโหมดข้อมูลจำลอง (Mock Data) เรียบร้อยแล้ว "
+            f"({loaded_count} รายการ)"
+        )
+        print("    [หมายเหตุ: ข้อมูลทั้งหมดเป็นข้อมูลสังเคราะห์ ไม่มีข้อมูลส่วนบุคคลจริง]")
+    else:
+        loaded_count = manager.load_sample_data()
+        print(f"\n[i] เริ่มต้นระบบและโหลดชุดข้อมูลตัวอย่างเรียบร้อยแล้ว ({loaded_count} รายการ)")
 
     while True:
         try:
@@ -302,14 +338,23 @@ def main() -> None:
             choice = input("เลือกเมนูที่ต้องการ (0-8): ").strip()
 
             if choice == "1":
-                print_table(manager.get_all_students(), caption="รายชื่อนักเรียนปัจจุบันในระบบ")
+                caption = (
+                    "รายชื่อนักเรียนในโหมดข้อมูลจำลอง"
+                    if is_mock_mode
+                    else "รายชื่อนักเรียนปัจจุบันในระบบ"
+                )
+                print_table(manager.get_all_students(), caption=caption)
             elif choice == "2":
                 handle_add_student(manager)
             elif choice == "3":
                 handle_remove_student(manager)
             elif choice == "4":
-                loaded_count = manager.load_sample_data()
-                print(f"[✓] โหลดข้อมูลตัวอย่างสำเร็จ ({loaded_count} รายการ)")
+                if is_mock_mode:
+                    loaded_count = manager.load_mock_data(args.mock_count)
+                    print(f"[✓] โหลดข้อมูลจำลองสำหรับการสาธิตสำเร็จ ({loaded_count} รายการ)")
+                else:
+                    loaded_count = manager.load_sample_data()
+                    print(f"[✓] โหลดข้อมูลตัวอย่างสำเร็จ ({loaded_count} รายการ)")
             elif choice == "5":
                 handle_sorting(manager)
             elif choice == "6":

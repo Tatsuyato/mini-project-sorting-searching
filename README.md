@@ -58,12 +58,14 @@ mini-project-sorting-searching/
 │   └── student.py          # Student dataclass และการคำนวณเกรด
 ├── services/
 │   ├── __init__.py
+│   ├── mock_data.py        # ตัวสร้างข้อมูลสังเคราะห์จำลองสำหรับการสาธิต (Synthetic Mock Data)
 │   └── score_manager.py    # Business logic, state management และ benchmark
 ├── tests/
 │   ├── __init__.py
 │   ├── test_sorting.py      # Unit tests สำหรับ Sorting Algorithms
 │   ├── test_searching.py    # Unit tests สำหรับ Searching Algorithms
-│   └── test_score_manager.py# Unit tests สำหรับ Model และ Service
+│   ├── test_score_manager.py# Unit tests สำหรับ Model และ Service
+│   └── test_mock_data.py    # Unit tests สำหรับ Mock Data และ CLI arguments
 ├── main.py                 # โปรแกรมหลัก (Interactive CLI Interface)
 ├── .gitignore
 └── README.md
@@ -79,15 +81,32 @@ mini-project-sorting-searching/
 - Python 3.9 ขึ้นไป (ทดสอบบน Python 3.11)
 
 ### 1. เรียกใช้งานโปรแกรมแบบ Interactive (CLI)
+
+#### โหมดปกติ (ข้อมูลตัวอย่าง 12 รายการ)
 ```bash
 python3 main.py
+```
+
+#### โหมดข้อมูลสังเคราะห์จำลองสำหรับการสาธิต (Mock Data 35 รายการ)
+สำหรับการสาธิตการทำงานของขั้นตอนวิธี Sorting และ Searching ในสเกลกลุ่มเรียน สามารถเปิดโหมดข้อมูลจำลองได้โดยระบุ Flag `--mock-data` หรือใช้ alias `-data-test`, `--data-test`, หรือ `--mock`:
+```bash
+# รันด้วย flag ข้อกำหนดการทดสอบ (Aliases)
+python3 main.py -data-test
+python3 main.py --data-test
+
+# หรือรันด้วย flag เดิม
+python3 main.py --mock-data
+python3 main.py --mock
+
+# สามารถระบุจำนวนข้อมูลจำลองที่ต้องการได้ (ค่าเริ่มต้น: 35)
+python3 main.py -data-test --mock-count 50
 ```
 
 ### เมนูการใช้งานในโปรแกรม:
 1. `แสดงรายชื่อนักเรียนทั้งหมด (View All Students)`
 2. `เพิ่มข้อมูลนักเรียน (Add Student)`
 3. `ลบข้อมูลนักเรียน (Delete Student)`
-4. `โหลดชุดข้อมูลตัวอย่าง (Load Demo Data)` - โหลดข้อมูลนักเรียน 12 คน
+4. `โหลดชุดข้อมูลตัวอย่าง (Load Demo Data)` - โหลดข้อมูลนักเรียน 12 คน (หรือโหลดข้อมูลจำลองซ้ำในโหมด Mock Data)
 5. `สาธิตการเรียงลำดับ (Demonstrate Sorting Algorithms)` - เลือกอัลกอริทึม, เกณฑ์เรียง (คะแนน/รหัส/ชื่อ), ทิศทาง (น้อยไปมาก/มากไปน้อย)
 6. `สาธิตการค้นหา (Demonstrate Searching Algorithms)` - ค้นหาแบบเชิงเส้นหรือทวิภาค
 7. `ตารางเปรียบเทียบประสิทธิภาพ Sorting (Benchmark All)` - ประมวลผลเปรียบเทียบ 4 อัลกอริทึมพร้อมกัน
@@ -96,9 +115,22 @@ python3 main.py
 
 ---
 
+## 🔒 ข้อชี้แจงเกี่ยวกับข้อมูลสังเคราะห์และจริยธรรมข้อมูล (Synthetic Data & Privacy Notice)
+
+- **ข้อมูลสังเคราะห์ 100% (Synthetic / Mock Data Only):** ข้อมูลนักเรียนทั้งหมดในระบบ ทั้งในโหมดเริ่มต้น (12 รายการ) และโหมดข้อมูลจำลองสำหรับการสาธิต (`--mock-data` / `--mock` 35 รายการ) เป็น **ข้อมูลสังเคราะห์ที่สร้างขึ้นเพื่อการศึกษาเท่านั้น** โดยใช้รูปแบบรหัสปลอม เช่น `TEST0001` และชื่อปลอม เช่น `นักเรียนทดสอบ 001`
+- **ไม่มีการใช้ข้อมูลส่วนบุคคลจริง:** ทางผู้จัดทำ **ไม่มีการคัดลอก เผยแพร่ หรือจัดเก็บชื่อจริง นามสกุลจริง หรือรหัสนักศึกษาจริง** จากระบบสารสนเทศของสถาบันการศึกษาใด ๆ
+- **หมายเหตุแหล่งอ้างอิง:** ลิงก์ระบบบริการการศึกษา [https://reg.skru.ac.th/registrar/studentset.asp?cmd=1&campusid=1&groupyear=681&studentgroup=10874&avs236771226=5](https://reg.skru.ac.th/registrar/studentset.asp?cmd=1&campusid=1&groupyear=681&studentgroup=10874&avs236771226=5) ถูกนำมาใช้เพื่อเป็นแนวทางอ้างอิง **โครงสร้างและบริบทของข้อมูลกลุ่มเรียน (Student Group Data Structure & Context)** เท่านั้น มิใช่การนำข้อมูลส่วนบุคคลจริงมาใช้ในระบบ
+
+---
+
 ## 🧪 การทดสอบชุดคำสั่ง (Testing & Verification)
 
-### รัน Unit Tests ทั้งหมด
+### รัน Unit Tests ด้วย pytest
+```bash
+pytest -v
+```
+
+### รัน Unit Tests ด้วย unittest (Standard Library)
 ```bash
 python3 -m unittest discover -s tests -v
 ```
@@ -107,3 +139,4 @@ python3 -m unittest discover -s tests -v
 ```bash
 python3 -m py_compile main.py models/*.py algorithms/*.py services/*.py tests/*.py
 ```
+
