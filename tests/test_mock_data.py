@@ -15,7 +15,7 @@ class TestMockDataGenerator(unittest.TestCase):
     def test_default_count(self) -> None:
         students = generate_mock_students()
         self.assertEqual(len(students), DEFAULT_MOCK_COUNT)
-        self.assertEqual(len(students), 35)
+        self.assertEqual(len(students), 12)
 
     def test_custom_count(self) -> None:
         self.assertEqual(len(generate_mock_students(10)), 10)
@@ -26,6 +26,12 @@ class TestMockDataGenerator(unittest.TestCase):
             generate_mock_students(0)
         with self.assertRaises(ValueError):
             generate_mock_students(-10)
+        with self.assertRaises(ValueError):
+            generate_mock_students(1_000_001)
+
+    def test_max_count_is_supported_by_validation(self) -> None:
+        from services.mock_data import MAX_MOCK_COUNT
+        self.assertEqual(MAX_MOCK_COUNT, 1_000_000)
 
     def test_synthetic_id_format(self) -> None:
         students = generate_mock_students(35)
@@ -86,8 +92,8 @@ class TestScoreManagerMockIntegration(unittest.TestCase):
 
     def test_load_mock_data(self) -> None:
         count = self.manager.load_mock_data()
-        self.assertEqual(count, 35)
-        self.assertEqual(self.manager.count, 35)
+        self.assertEqual(count, DEFAULT_MOCK_COUNT)
+        self.assertEqual(self.manager.count, DEFAULT_MOCK_COUNT)
         students = self.manager.get_all_students()
         self.assertTrue(all(s.student_id.startswith("TEST") for s in students))
 
@@ -105,10 +111,10 @@ class TestScoreManagerMockIntegration(unittest.TestCase):
         self.manager.load_mock_data()
         # Sequential search
         matched_seq, metrics_seq = self.manager.search_students(
-            "sequential", "TEST0015", key_field="student_id"
+            "sequential", "TEST0010", key_field="student_id"
         )
         self.assertEqual(len(matched_seq), 1)
-        self.assertEqual(matched_seq[0].student_id, "TEST0015")
+        self.assertEqual(matched_seq[0].student_id, "TEST0010")
         self.assertTrue(metrics_seq.found)
 
         # Binary search (sort by student_id first)
@@ -116,10 +122,10 @@ class TestScoreManagerMockIntegration(unittest.TestCase):
             "merge", key_field="student_id", reverse=False, update_state=True
         )
         matched_bin, metrics_bin = self.manager.search_students(
-            "binary", "TEST0015", key_field="student_id"
+            "binary", "TEST0010", key_field="student_id"
         )
         self.assertEqual(len(matched_bin), 1)
-        self.assertEqual(matched_bin[0].student_id, "TEST0015")
+        self.assertEqual(matched_bin[0].student_id, "TEST0010")
         self.assertTrue(metrics_bin.found)
 
     def test_benchmark_sorting_on_mock_data(self) -> None:
@@ -159,27 +165,27 @@ class TestCLIArguments(unittest.TestCase):
     def test_parse_args_default(self) -> None:
         args = parse_args([])
         self.assertFalse(args.mock_data)
-        self.assertEqual(args.mock_count, 35)
+        self.assertEqual(args.mock_count, 12)
 
     def test_parse_args_mock_data_flag(self) -> None:
         args = parse_args(["--mock-data"])
         self.assertTrue(args.mock_data)
-        self.assertEqual(args.mock_count, 35)
+        self.assertEqual(args.mock_count, 12)
 
     def test_parse_args_data_test_single_dash_flag(self) -> None:
         args = parse_args(["-data-test"])
         self.assertTrue(args.mock_data)
-        self.assertEqual(args.mock_count, 35)
+        self.assertEqual(args.mock_count, 12)
 
     def test_parse_args_data_test_double_dash_flag(self) -> None:
         args = parse_args(["--data-test"])
         self.assertTrue(args.mock_data)
-        self.assertEqual(args.mock_count, 35)
+        self.assertEqual(args.mock_count, 12)
 
     def test_parse_args_mock_alias_flag(self) -> None:
         args = parse_args(["--mock"])
         self.assertTrue(args.mock_data)
-        self.assertEqual(args.mock_count, 35)
+        self.assertEqual(args.mock_count, 12)
 
     def test_parse_args_custom_mock_count(self) -> None:
         args = parse_args(["--mock-data", "--mock-count", "25"])
@@ -210,7 +216,7 @@ class TestCLIArguments(unittest.TestCase):
             self.assertEqual(cm.exception.code, 0)
         output_str = out.getvalue()
         self.assertIn("เริ่มต้นระบบในโหมดข้อมูลจำลอง (Mock Data)", output_str)
-        self.assertIn("35 รายการ", output_str)
+        self.assertIn("12 รายการ", output_str)
 
     @patch("builtins.input", return_value="0")
     def test_main_data_test_single_dash_exit(self, mock_input) -> None:
@@ -221,7 +227,7 @@ class TestCLIArguments(unittest.TestCase):
             self.assertEqual(cm.exception.code, 0)
         output_str = out.getvalue()
         self.assertIn("เริ่มต้นระบบในโหมดข้อมูลจำลอง (Mock Data)", output_str)
-        self.assertIn("35 รายการ", output_str)
+        self.assertIn("12 รายการ", output_str)
 
     @patch("builtins.input", return_value="0")
     def test_main_data_test_double_dash_exit(self, mock_input) -> None:
@@ -232,7 +238,7 @@ class TestCLIArguments(unittest.TestCase):
             self.assertEqual(cm.exception.code, 0)
         output_str = out.getvalue()
         self.assertIn("เริ่มต้นระบบในโหมดข้อมูลจำลอง (Mock Data)", output_str)
-        self.assertIn("35 รายการ", output_str)
+        self.assertIn("12 รายการ", output_str)
 
     @patch("builtins.input", return_value="0")
     def test_main_mock_alias_exit(self, mock_input) -> None:
@@ -243,5 +249,5 @@ class TestCLIArguments(unittest.TestCase):
             self.assertEqual(cm.exception.code, 0)
         output_str = out.getvalue()
         self.assertIn("เริ่มต้นระบบในโหมดข้อมูลจำลอง (Mock Data)", output_str)
-        self.assertIn("35 รายการ", output_str)
+        self.assertIn("12 รายการ", output_str)
 

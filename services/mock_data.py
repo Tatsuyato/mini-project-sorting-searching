@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from models.student import Student
 
-DEFAULT_MOCK_COUNT = 35
+DEFAULT_MOCK_COUNT = 12
+MAX_MOCK_COUNT = 1_000_000
 
 # Predefined varied scores across 35 items representing realistic grade distribution:
 # A (>=80), B+ (75-79.9), B (70-74.9), C+ (65-69.9), C (60-64.9), D+ (55-59.9), D (50-54.9), F (<50)
@@ -30,8 +31,8 @@ def generate_mock_students(count: int = DEFAULT_MOCK_COUNT) -> list[Student]:
     Raises:
         ValueError: If count < 1.
     """
-    if count < 1:
-        raise ValueError("Count must be at least 1.")
+    if count < 1 or count > MAX_MOCK_COUNT:
+        raise ValueError(f"Count must be between 1 and {MAX_MOCK_COUNT:,}.")
 
     students: list[Student] = []
     base_len = len(_BASE_SCORES)

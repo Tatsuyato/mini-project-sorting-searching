@@ -11,6 +11,7 @@ from typing import List, Optional
 from algorithms.searching import SearchMetrics
 from algorithms.sorting import SortMetrics
 from models.student import Student
+from services.mock_data import DEFAULT_MOCK_COUNT, MAX_MOCK_COUNT
 from services.score_manager import ScoreManager
 
 
@@ -100,6 +101,10 @@ def handle_remove_student(manager: ScoreManager) -> None:
         return
 
     student_id = input("กรอกรหัสนักเรียนที่ต้องการลบ: ").strip()
+    if not student_id:
+        print("[!] รหัสนักเรียนต้องไม่เป็นค่าว่าง")
+        return
+
     if manager.remove_student(student_id):
         print(f"[✓] ลบข้อมูลนักเรียนรหัส {student_id} สำเร็จ!")
     else:
@@ -127,7 +132,7 @@ def handle_sorting(manager: ScoreManager) -> None:
     }
     algo_name = algo_map.get(algo_choice)
     if not algo_name:
-        print("[!] ตัวเลือกอัลกอริทึมไม่ถูกต้อง")
+        print("[!] ตัวเลือกอัลกอริทึมไม่ถูกต้อง กรุณาเลือกหมายเลข 1 ถึง 4")
         return
 
     print("\nเลือกเกณฑ์ในการเรียงลำดับ:")
@@ -143,7 +148,7 @@ def handle_sorting(manager: ScoreManager) -> None:
     }
     key_field = key_map.get(key_choice)
     if not key_field:
-        print("[!] ตัวเลือกเกณฑ์ไม่ถูกต้อง")
+        print("[!] ตัวเลือกเกณฑ์ไม่ถูกต้อง กรุณาเลือกหมายเลข 1 ถึง 3")
         return
 
     print("\nเลือกทิศทางการเรียง:")
@@ -161,22 +166,25 @@ def handle_sorting(manager: ScoreManager) -> None:
     update_choice = input("ต้องการบันทึกผลการจัดเรียงนี้เป็นลำดับหลักของระบบหรือไม่? (y/N): ").strip().lower()
     update_state = (update_choice == "y")
 
-    sorted_list, metrics = manager.sort_students(
-        algorithm=algo_name,
-        key_field=key_field,
-        reverse=reverse,
-        update_state=update_state,
-        trace=show_trace,
-    )
+    try:
+        sorted_list, metrics = manager.sort_students(
+            algorithm=algo_name,
+            key_field=key_field,
+            reverse=reverse,
+            update_state=update_state,
+            trace=show_trace,
+        )
 
-    if show_trace and metrics.traces:
-        display_trace(metrics.traces, f"ขั้นตอนการทำงานจริง (Trace): {metrics.algorithm_name}")
+        if show_trace and metrics.traces:
+            display_trace(metrics.traces, f"ขั้นตอนการทำงานจริง (Trace): {metrics.algorithm_name}")
 
-    direction_str = "มากไปน้อย" if reverse else "น้อยไปมาก"
-    print_table(sorted_list, caption=f"ผลลัพธ์จัดเรียงด้วย {metrics.algorithm_name} (เรียงตาม {key_field} แบบ{direction_str})")
-    display_sorting_metrics(metrics)
-    if update_state:
-        print("[✓] อัปเดตลำดับข้อมูลในระบบเรียบร้อยแล้ว")
+        direction_str = "มากไปน้อย" if reverse else "น้อยไปมาก"
+        print_table(sorted_list, caption=f"ผลลัพธ์จัดเรียงด้วย {metrics.algorithm_name} (เรียงตาม {key_field} แบบ{direction_str})")
+        display_sorting_metrics(metrics)
+        if update_state:
+            print("[✓] อัปเดตลำดับข้อมูลในระบบเรียบร้อยแล้ว")
+    except ValueError as err:
+        print(f"[!] เกิดข้อผิดพลาดในการจัดเรียง: {err}")
 
 
 def handle_searching(manager: ScoreManager) -> None:
@@ -189,6 +197,9 @@ def handle_searching(manager: ScoreManager) -> None:
     print(" 1) Sequential Search (ค้นหาเชิงเส้น - ตรวจสอบทีละตัว ไม่จำเป็นต้องเรียงลำดับ)")
     print(" 2) Binary Search     (ค้นหาแบบทวิภาค - ต้องเรียงลำดับข้อมูลก่อน O(log n))")
     search_algo_choice = input("เลือกหมายเลข (1-2) [ค่าเริ่มต้น: 1]: ").strip() or "1"
+    if search_algo_choice not in ("1", "2"):
+        print("[!] ตัวเลือกอัลกอริทึมการค้นหาไม่ถูกต้อง กรุณาเลือกหมายเลข 1 หรือ 2")
+        return
 
     print("\nเลือกฟิลด์ที่ต้องการค้นหา:")
     print(" 1) รหัสนักเรียน (Student ID)")
@@ -199,7 +210,7 @@ def handle_searching(manager: ScoreManager) -> None:
     field_map = {"1": "student_id", "2": "score", "3": "name"}
     key_field = field_map.get(field_choice)
     if not key_field:
-        print("[!] ฟิลด์ที่เลือกไม่ถูกต้อง")
+        print("[!] ฟิลด์ที่เลือกไม่ถูกต้อง กรุณาเลือกหมายเลข 1 ถึง 3")
         return
 
     if search_algo_choice == "2" and key_field == "name":
@@ -215,15 +226,25 @@ def handle_searching(manager: ScoreManager) -> None:
     show_trace = (trace_choice != "n")
 
     if search_algo_choice == "1":
-        matched, metrics = manager.search_students(
-            "sequential", query_val, key_field=key_field, trace=show_trace
-        )
-        if show_trace and metrics.traces:
-            display_trace(metrics.traces, f"ลำดับขั้นตอนการตรวจสอบ (Sequential Search Trace): '{query_val}'")
-        print_table(matched, caption=f"ผลการค้นหา Sequential Search: '{query_val}'")
-        display_searching_metrics(metrics)
+        try:
+            matched, metrics = manager.search_students(
+                "sequential", query_val, key_field=key_field, trace=show_trace
+            )
+            if show_trace and metrics.traces:
+                display_trace(metrics.traces, f"ลำดับขั้นตอนการตรวจสอบ (Sequential Search Trace): '{query_val}'")
+            print_table(matched, caption=f"ผลการค้นหา Sequential Search: '{query_val}'")
+            display_searching_metrics(metrics)
+        except ValueError as err:
+            print(f"[!] เกิดข้อผิดพลาดในการค้นหา: {err}")
 
     elif search_algo_choice == "2":
+        if key_field == "score":
+            try:
+                float(query_val)
+            except ValueError:
+                print(f"[!] เกิดข้อผิดพลาด: ค่าคะแนนสำหรับการค้นหาแบบ Binary Search ต้องเป็นตัวเลขที่ถูกต้อง ไม่ใช่ '{query_val}'")
+                return
+
         # Check if current list is sorted
         # Binary search default direction check
         is_asc_sorted = manager.is_current_list_sorted(key_field=key_field, reverse=False)
@@ -233,10 +254,14 @@ def handle_searching(manager: ScoreManager) -> None:
             print(f"\n[!] คำเตือน: รายการนักเรียนยังไม่ได้เรียงลำดับตาม '{key_field}'")
             auto_sort = input("ต้องการให้ระบบเรียงลำดับข้อมูลอัตโนมัติก่อนค้นหาหรือไม่? (Y/n): ").strip().lower()
             if auto_sort != "n":
-                manager.sort_students("merge", key_field=key_field, reverse=False, update_state=True)
-                print(f"[✓] เรียงลำดับข้อมูลตาม '{key_field}' แบบน้อยไปมากเรียบร้อยแล้ว")
-                is_asc_sorted = True
-                is_desc_sorted = False
+                try:
+                    manager.sort_students("merge", key_field=key_field, reverse=False, update_state=True)
+                    print(f"[✓] เรียงลำดับข้อมูลตาม '{key_field}' แบบน้อยไปมากเรียบร้อยแล้ว")
+                    is_asc_sorted = True
+                    is_desc_sorted = False
+                except ValueError as err:
+                    print(f"[!] เกิดข้อผิดพลาดในการจัดเรียงข้อมูล: {err}")
+                    return
             else:
                 print("[!] ยกเลิกการค้นหา Binary Search เนื่องจากข้อมูลยังไม่ได้รับการจัดเรียง")
                 return
@@ -251,7 +276,7 @@ def handle_searching(manager: ScoreManager) -> None:
             print_table(matched, caption=f"ผลการค้นหา Binary Search: '{query_val}'")
             display_searching_metrics(metrics)
         except ValueError as err:
-            print(f"[!] เกิดข้อผิดพลาด: {err}")
+            print(f"[!] เกิดข้อผิดพลาดในการค้นหา: {err}")
     else:
         print("[!] ตัวเลือกการค้นหาไม่ถูกต้อง")
 
@@ -306,12 +331,23 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         dest="mock_data",
         help="โหลดชุดข้อมูลสังเคราะห์จำลองสำหรับการสาธิต (Synthetic Mock Data / Test Data)",
     )
+    def _mock_count(value: str) -> int:
+        try:
+            count = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError("จำนวนข้อมูลจำลองต้องเป็นจำนวนเต็ม") from exc
+        if not 1 <= count <= MAX_MOCK_COUNT:
+            raise argparse.ArgumentTypeError(
+                f"จำนวนข้อมูลจำลองต้องอยู่ระหว่าง 1 ถึง {MAX_MOCK_COUNT:,}"
+            )
+        return count
+
     parser.add_argument(
         "--mock-count",
-        type=int,
-        default=35,
+        type=_mock_count,
+        default=DEFAULT_MOCK_COUNT,
         dest="mock_count",
-        help="จำนวนข้อมูลจำลองที่ต้องการสร้างในโหมด Mock Data (ค่าเริ่มต้น: 35 รายการ)",
+        help=f"จำนวนข้อมูลจำลอง (1-{MAX_MOCK_COUNT:,}; ค่าเริ่มต้น: {DEFAULT_MOCK_COUNT})",
     )
     return parser.parse_args(args)
 
@@ -371,7 +407,7 @@ def main(argv: Optional[List[str]] = None) -> None:
                 sys.exit(0)
             else:
                 print("[!] เมนูไม่ถูกต้อง กรุณาเลือกตัวเลข 0 ถึง 8")
-        except (KeyboardInterrupt, EOFError):
+        except (KeyboardInterrupt, EOFError, StopIteration):
             print("\n\nออกจากโปรแกรมเรียบร้อยแล้ว")
             sys.exit(0)
 

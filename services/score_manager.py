@@ -15,7 +15,7 @@ from algorithms.sorting import (
     selection_sort,
 )
 from models.student import Student
-from services.mock_data import DEFAULT_MOCK_COUNT, generate_mock_students
+from services.mock_data import DEFAULT_MOCK_COUNT, MAX_MOCK_COUNT, generate_mock_students
 
 
 class ScoreManager:
@@ -40,7 +40,11 @@ class ScoreManager:
 
     def remove_student(self, student_id: str) -> bool:
         """Remove a student by ID. Returns True if removed, False otherwise."""
+        if not isinstance(student_id, str):
+            return False
         target_id = student_id.strip()
+        if not target_id:
+            return False
         for idx, student in enumerate(self._students):
             if student.student_id == target_id:
                 del self._students[idx]
@@ -49,7 +53,11 @@ class ScoreManager:
 
     def get_student(self, student_id: str) -> Optional[Student]:
         """Retrieve a student by ID."""
+        if not isinstance(student_id, str):
+            return None
         target_id = student_id.strip()
+        if not target_id:
+            return None
         for student in self._students:
             if student.student_id == target_id:
                 return student
@@ -94,11 +102,16 @@ class ScoreManager:
             "student_id": lambda s: s.student_id,
             "name": lambda s: s.name.lower(),
         }
-        if key_field not in valid_fields:
+        if not isinstance(key_field, str):
             raise ValueError(
                 f"Invalid key field '{key_field}'. Must be one of: {list(valid_fields.keys())}"
             )
-        return valid_fields[key_field]
+        clean_field = key_field.strip().lower()
+        if clean_field not in valid_fields:
+            raise ValueError(
+                f"Invalid key field '{key_field}'. Must be one of: {list(valid_fields.keys())}"
+            )
+        return valid_fields[clean_field]
 
     def sort_students(
         self,
@@ -120,8 +133,13 @@ class ScoreManager:
         Returns:
             Tuple of (sorted_list, SortMetrics)
         """
-        key_func = self._get_key_extractor(key_field)
+        if not isinstance(algorithm, str):
+            raise ValueError(
+                f"Unknown sorting algorithm '{algorithm}'. "
+                "Supported: 'bubble', 'insertion', 'selection', 'merge'"
+            )
         algo = algorithm.strip().lower()
+        key_func = self._get_key_extractor(key_field)
 
         if algo == "bubble":
             sorted_list, metrics = bubble_sort(
@@ -170,15 +188,27 @@ class ScoreManager:
         Returns:
             Tuple of (matched_students, SearchMetrics)
         """
+        if not isinstance(algorithm, str):
+            raise ValueError(
+                f"Unknown searching algorithm '{algorithm}'. "
+                "Supported: 'sequential', 'binary'"
+            )
         algo = algorithm.strip().lower()
+        if algo not in ("sequential", "binary"):
+            raise ValueError(
+                f"Unknown searching algorithm '{algorithm}'. "
+                "Supported: 'sequential', 'binary'"
+            )
+
         key_func = self._get_key_extractor(key_field)
+        clean_field = key_field.strip().lower() if isinstance(key_field, str) else key_field
 
         # Type conversion for query if searching by score
         target_val = query
-        if key_field == "score":
+        if clean_field == "score":
             try:
                 target_val = float(query)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValueError(f"Score search query must be a valid number, got '{query}'.")
 
         if algo == "sequential":
@@ -200,11 +230,6 @@ class ScoreManager:
             )
             matched = [self._students[idx]] if idx is not None else []
             return matched, metrics
-        else:
-            raise ValueError(
-                f"Unknown searching algorithm '{algorithm}'. "
-                "Supported: 'sequential', 'binary'"
-            )
 
     def is_current_list_sorted(self, key_field: str = "score", reverse: bool = False) -> bool:
         """Check if internal student list is currently sorted."""

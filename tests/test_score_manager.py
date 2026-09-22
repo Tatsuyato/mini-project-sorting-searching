@@ -164,6 +164,77 @@ class TestScoreManagerService(unittest.TestCase):
             self.assertGreater(metrics.comparisons, 0)
             self.assertGreaterEqual(metrics.swaps, 0)
 
+    def test_search_score_invalid_query_raises_value_error(self) -> None:
+        """Regression test: non-numeric query for score search must raise ValueError consistently."""
+        self.manager.load_sample_data()
+        invalid_queries = ["Som", "abc", "", "   ", None, [], {"score": 80}]
+        for query in invalid_queries:
+            for algo in ["sequential", "binary"]:
+                with self.subTest(algorithm=algo, query=query):
+                    with self.assertRaises(ValueError) as ctx:
+                        self.manager.search_students(algo, query, key_field="score")
+                    self.assertIn("Score search query must be a valid number", str(ctx.exception))
+
+    def test_search_score_valid_query_formats(self) -> None:
+        """Verify that score search accepts valid string numbers, floats, and integers."""
+        self.manager.load_sample_data()
+        # Sequential
+        matches, metrics = self.manager.search_students("sequential", "85.5", key_field="score")
+        self.assertTrue(metrics.found)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0].name, "Somchai Jaidee")
+
+        matches_float, _ = self.manager.search_students("sequential", 85.5, key_field="score")
+        self.assertEqual(len(matches_float), 1)
+
+        # Binary (ensure sorted first)
+        self.manager.sort_students("merge", key_field="score", reverse=False, update_state=True)
+        matches_bin, bin_metrics = self.manager.search_students("binary", "85.5", key_field="score")
+        self.assertTrue(bin_metrics.found)
+        self.assertEqual(len(matches_bin), 1)
+        self.assertEqual(matches_bin[0].name, "Somchai Jaidee")
+
+    def test_search_not_found_returns_empty(self) -> None:
+        """Verify searching for non-existent score or ID safely returns empty list."""
+        self.manager.load_sample_data()
+        # Score not found
+        matches, metrics = self.manager.search_students("sequential", 999.0, key_field="score")
+        self.assertEqual(matches, [])
+        self.assertFalse(metrics.found)
+
+        # ID not found in binary
+        self.manager.sort_students("merge", key_field="student_id", reverse=False, update_state=True)
+        matches_bin, bin_metrics = self.manager.search_students("binary", "9999999", key_field="student_id")
+        self.assertEqual(matches_bin, [])
+        self.assertFalse(bin_metrics.found)
+
+    def test_search_invalid_algorithm_or_field_raises_value_error(self) -> None:
+        """Verify invalid algorithm names or key fields raise ValueError consistently."""
+        self.manager.load_sample_data()
+        with self.assertRaises(ValueError):
+            self.manager.search_students("quick", "6601001", key_field="student_id")
+        with self.assertRaises(ValueError):
+            self.manager.search_students(None, "6601001", key_field="student_id")  # type: ignore
+        with self.assertRaises(ValueError):
+            self.manager.search_students("sequential", "6601001", key_field="invalid_field")
+        with self.assertRaises(ValueError):
+            self.manager.sort_students("unknown_algo", key_field="score")
+
+    def test_remove_and_get_student_safe_inputs(self) -> None:
+        """Verify remove_student and get_student safely handle empty or non-string inputs."""
+        self.manager.load_sample_data()
+        # get_student
+        self.assertIsNone(self.manager.get_student(""))
+        self.assertIsNone(self.manager.get_student("   "))
+        self.assertIsNone(self.manager.get_student(None))  # type: ignore
+        self.assertIsNone(self.manager.get_student(12345))  # type: ignore
+
+        # remove_student
+        self.assertFalse(self.manager.remove_student(""))
+        self.assertFalse(self.manager.remove_student("   "))
+        self.assertFalse(self.manager.remove_student(None))  # type: ignore
+        self.assertFalse(self.manager.remove_student(999))  # type: ignore
+
 
 if __name__ == "__main__":
     unittest.main()
