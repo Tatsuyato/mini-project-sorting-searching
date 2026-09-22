@@ -1,107 +1,109 @@
-# Mini Project: ระบบจัดการคะแนนนักเรียน (Student Score Management System)
-> โครงงานสาธิตอัลกอริทึมการจัดเรียง (Sorting) และการค้นหา (Searching) ด้วยภาษา Python (Clean Architecture & Zero External Dependencies)
+# ระบบจัดการคะแนนนักเรียน (Student Score Management System)
+### สาธิตการทำงานและเปรียบเทียบประสิทธิภาพ Sorting & Searching Algorithms ด้วย Python
+
+โปรเจกต์ขนาดเล็ก (Mini Project) ภาษา Python สำหรับการศึกษาการทำงานของขั้นตอนวิธี (Algorithms) ในหมวดการจัดเรียงข้อมูล (**Sorting**) และการค้นหาข้อมูล (**Searching**) ผ่านระบบจัดการข้อมูลคะแนนและเกรดของนักเรียน พร้อมเครื่องมือตรวจวัดประสิทธิภาพเชิงปริมาณ (Time & Operation Metrics)
 
 ---
 
-## 📌 บทนำและภาพรวมโครงการ
+## 📌 จุดเด่นของระบบ (Features)
 
-โครงงานนี้พัฒนาขึ้นเพื่อเป็นสื่อการเรียนรู้และระบบต้นแบบการจัดการคะแนนนักเรียน โดยมุ่งเน้นการนำเสนอหลักการทำงานและการเปรียบเทียบประสิทธิภาพของอัลกอริทึมพื้นฐานที่สำคัญในวิทยาการคอมพิวเตอร์:
+1. **สถาปัตยกรรมแบบแยกส่วน (Layered Architecture)**:
+   - **Domain Layer (`models/`)**: จัดการข้อมูลนักเรียน มีการตรวจสอบความถูกต้อง (Validation) ของรหัส, ชื่อ และช่วงคะแนน (0.0 – 100.0) พร้อมตัดเกรด A, B+, B, C+, C, D+, D, F อัตโนมัติ
+   - **Algorithm Core (`algorithms/`)**: อัลกอริทึมถูกเขียนเป็น Pure Functions และ Generic Type ไม่ขึ้นต่อโมเดลใดโมเดลหนึ่งโดยตรง รองรับ Custom Key Selector และการจัดเรียงทั้งแบบน้อยไปมาก (Ascending) และมากไปน้อย (Descending)
+   - **Service Layer (`services/`)**: จัดการ CRUD ใน Memory, รันการเปรียบเทียบประสิทธิภาพพร้อมกัน (Benchmark), และควบคุมความถูกต้องของเงื่อนไข (Preconditions)
+   - **CLI Presentation (`main.py`)**: หน้าต่างคำสั่งแบบเมนูโต้ตอบภาษาไทย แสดงตารางข้อมูลแบบ ASCII Table อย่างสวยงามและเป็นระเบียบ
 
-- **Sorting Algorithms (การจัดเรียงลำดับ)**:
-  1. **Bubble Sort** (พร้อม Early-exit optimization เมื่อข้อมูลเรียงแล้ว)
-  2. **Insertion Sort**
-  3. **Selection Sort**
-  4. **Merge Sort** (Divide and Conquer)
-- **Searching Algorithms (การค้นหาข้อมูล)**:
-  1. **Sequential Search** (Linear Search)
-  2. **Binary Search** (พร้อม Precondition validation ตรวจสอบความถูกต้องของ Sorted array)
+2. **ระบบวัดประสิทธิภาพเพื่อการศึกษา (Educational Metrics)**:
+   - บันทึกจำนวนรอบที่เปรียบเทียบข้อมูล (**Comparisons**)
+   - บันทึกจำนวนครั้งที่มีการสลับค่า/เลื่อนข้อมูล/ผสานข้อมูล (**Swaps / Shifts / Merges**)
+   - จับเวลาการประมวลผลจริงในระดับมิลลิวินาที (**Elapsed Time in ms**) ผ่าน `time.perf_counter()`
 
-ระบบถูกออกแบบเชิงโมดูลาร์ (Modular Architecture) แยกส่วน Model, Algorithm, Service และ Presentation (CLI) ไว้อย่างชัดเจน พร้อมระบบบันทึก Metrics (Comparisons, Swaps/Ops, Execution Time) ในทุกอัลกอริทึม
-
----
-
-## 📊 ตารางสรุป Time & Space Complexity
-
-| อัลกอริทึม | Best Case | Average Case | Worst Case | Space Complexity | เสถียรภาพ (Stability) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Bubble Sort** | $O(n)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Stable |
-| **Insertion Sort** | $O(n)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Stable |
-| **Selection Sort** | $O(n^2)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Unstable |
-| **Merge Sort** | $O(n \log n)$ | $O(n \log n)$ | $O(n \log n)$ | $O(n)$ | Stable |
-| **Sequential Search** | $O(1)$ | $O(n)$ | $O(n)$ | $O(1)$ | - |
-| **Binary Search** | $O(1)$ | $O(\log n)$ | $O(\log n)$ | $O(1)$ | - |
+3. **การตรวจสอบเงื่อนไขก่อนค้นหา (Pre-condition Enforcement)**:
+   - Binary Search จะตรวจสอบล่วงหน้าเสมอว่าลิสต์ได้รับการเรียงลำดับแล้วหรือไม่ หากยังไม่เรียง จะแจ้งเตือนและมีตัวเลือกช่วยเรียงลำดับให้อัตโนมัติ
 
 ---
 
-## 🏗 โครงสร้างโฟลเดอร์ของโปรเจกต์
+## 📊 ตารางวิเคราะห์ขั้นตอนวิธี (Algorithm Complexity)
+
+### 1. อัลกอริทึมการจัดเรียง (Sorting Algorithms)
+
+| อัลกอริทึม | Best Case | Average Case | Worst Case | Space Complexity | Stability | คุณลักษณะเด่น |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Bubble Sort** | $O(n)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Stable | มี Early-exit flag หยุดทันทีเมื่อไม่มีการสลับค่าในรอบนั้น |
+| **Insertion Sort** | $O(n)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Stable | มีประสิทธิภาพสูงมากเมื่อข้อมูลเกือบเรียงลำดับอยู่แล้ว (Nearly Sorted) |
+| **Selection Sort** | $O(n^2)$ | $O(n^2)$ | $O(n^2)$ | $O(1)$ | Unstable | ทำการสลับข้อมูล (Swap) น้อยที่สุด ไม่เกิน $n-1$ ครั้ง |
+| **Merge Sort** | $O(n \log n)$ | $O(n \log n)$ | $O(n \log n)$ | $O(n)$ | Stable | ใช้หลัก Divide and Conquer รับประกันประสิทธิภาพ $O(n \log n)$ ทุกกรณี |
+
+### 2. อัลกอริทึมการค้นหา (Searching Algorithms)
+
+| อัลกอริทึม | Best Case | Average Case | Worst Case | Space Complexity | เงื่อนไขข้อมูลนำเข้า (Precondition) |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Sequential Search** | $O(1)$ | $O(n)$ | $O(n)$ | $O(k)^*$ | ข้อมูลไม่จำเป็นต้องเรียงลำดับ ค้นหาได้ทุกรายการที่ตรงกัน |
+| **Binary Search** | $O(1)$ | $O(\log n)$ | $O(\log n)$ | $O(1)$ | **ต้องเรียงลำดับข้อมูลก่อนเสมอ** (Sorted array) |
+
+*\* $k$ คือจำนวนรายการที่ค้นหาพบ*
+
+---
+
+## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
 ```text
 mini-project-sorting-searching/
-├── .gitignore               # การตั้งค่าละเว้นไฟล์ชั่วคราว
-├── README.md                # เอกสารประกอบโครงการ
-├── main.py                  # จุดเข้าใช้งานหลัก (Interactive CLI Menu ภาษาไทย)
-├── models/
-│   ├── __init__.py
-│   └── student.py           # Student Data Model พร้อมระบบคำนวณเกรดและ Validation
 ├── algorithms/
 │   ├── __init__.py
-│   ├── sorting.py           # Bubble, Insertion, Selection, Merge Sort พร้อม SortMetrics
-│   └── searching.py         # Sequential Search, Binary Search พร้อม SearchMetrics
+│   ├── sorting.py          # การทำงานของ Bubble, Insertion, Selection, Merge Sort
+│   └── searching.py        # การทำงานของ Sequential และ Binary Search
+├── models/
+│   ├── __init__.py
+│   └── student.py          # Student dataclass และการคำนวณเกรด
 ├── services/
 │   ├── __init__.py
-│   └── score_manager.py     # Service จัดการ State รายการนักเรียนและประสานงานอัลกอริทึม
-└── tests/
-    ├── __init__.py
-    ├── test_sorting.py       # Unit tests ทดสอบ Sorting algorithms (Edge cases & Objects)
-    ├── test_searching.py     # Unit tests ทดสอบ Searching algorithms (Preconditions & Results)
-    └── test_score_manager.py # Unit tests ทดสอบ Data model และ Service layer
+│   └── score_manager.py    # Business logic, state management และ benchmark
+├── tests/
+│   ├── __init__.py
+│   ├── test_sorting.py      # Unit tests สำหรับ Sorting Algorithms
+│   ├── test_searching.py    # Unit tests สำหรับ Searching Algorithms
+│   └── test_score_manager.py# Unit tests สำหรับ Model และ Service
+├── main.py                 # โปรแกรมหลัก (Interactive CLI Interface)
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## 🚀 ความต้องการระบบและการติดตั้ง
+## 🚀 วิธีการติดตั้งและเริ่มใช้งาน
 
-- **Python Runtime**: Python 3.10 ขึ้นไป (ทดสอบกับ Python 3.11.15)
-- **Dependencies**: ใช้เฉพาะ Standard Library ของ Python (Zero External Dependencies ไม่ต้องลง `pip install` เพิ่มเติม)
+โปรเจกต์นี้เขียนด้วย **Python 3 Standard Library** ล้วน จึงไม่จำเป็นต้องติดตั้งไลบรารีภายนอกเพิ่มเติม
 
----
+### ความต้องการของระบบ:
+- Python 3.9 ขึ้นไป (ทดสอบบน Python 3.11)
 
-## 💻 การเรียกใช้งานโปรแกรม (Usage)
-
-รันโปรแกรมผ่าน Terminal หรือ Command Prompt:
-
+### 1. เรียกใช้งานโปรแกรมแบบ Interactive (CLI)
 ```bash
 python3 main.py
 ```
 
-### ฟังก์ชันหลักในเมนูของโปรแกรม:
-1. **แสดงรายชื่อนักเรียนทั้งหมด**: แสดงผลตาราง ASCII ระบุรหัสนักเรียน ชื่อ คะแนน และเกรด
-2. **เพิ่มข้อมูลนักเรียน**: รองรับการตรวจสอบข้อมูลซ้ำ และ validation คะแนน 0.0 - 100.0
-3. **ลบข้อมูลนักเรียน**: ลบข้อมูลด้วยรหัสนักเรียน
-4. **โหลดชุดข้อมูลตัวอย่าง**: โหลดข้อมูลนักเรียนจำลอง 12 รายการเพื่อการทดสอบทันที
-5. **สาธิตการเรียงลำดับ**:
-   - เลือกอัลกอริทึมได้ทั้ง 4 ตัว
-   - เลือกคีย์การเรียง: คะแนน (Score), รหัส (ID) หรือ ชื่อ (Name)
-   - เลือกลำดับ: น้อยไปมาก หรือ มากไปน้อย
-   - แสดงสถิติ: Comparisons, Swaps และ Elapsed Time (ms)
-6. **สาธิตการค้นหาข้อมูล**:
-   - Sequential Search: ค้นหาได้ทันที ไม่ต้องเรียงลำดับ
-   - Binary Search: ตรวจสอบความถูกต้องของ Sorted array อัตโนมัติ (หากยังไม่เรียงจะมีตัวเลือกให้เรียงทันที)
-7. **ตารางเปรียบเทียบประสิทธิภาพ (Benchmark All)**: รันการจัดเรียงทั้ง 4 อัลกอริทึมบนชุดข้อมูลเดียวกัน พร้อมตารางสรุปเปรียบเทียบ
-8. **ล้างข้อมูลทั้งหมด**: เคลียร์ข้อมูลในระบบ
+### เมนูการใช้งานในโปรแกรม:
+1. `แสดงรายชื่อนักเรียนทั้งหมด (View All Students)`
+2. `เพิ่มข้อมูลนักเรียน (Add Student)`
+3. `ลบข้อมูลนักเรียน (Delete Student)`
+4. `โหลดชุดข้อมูลตัวอย่าง (Load Demo Data)` - โหลดข้อมูลนักเรียน 12 คน
+5. `สาธิตการเรียงลำดับ (Demonstrate Sorting Algorithms)` - เลือกอัลกอริทึม, เกณฑ์เรียง (คะแนน/รหัส/ชื่อ), ทิศทาง (น้อยไปมาก/มากไปน้อย)
+6. `สาธิตการค้นหา (Demonstrate Searching Algorithms)` - ค้นหาแบบเชิงเส้นหรือทวิภาค
+7. `ตารางเปรียบเทียบประสิทธิภาพ Sorting (Benchmark All)` - ประมวลผลเปรียบเทียบ 4 อัลกอริทึมพร้อมกัน
+8. `ล้างข้อมูลทั้งหมด (Clear All Records)`
+0. `ออกจากโปรแกรม (Exit)`
 
 ---
 
-## 🧪 การทดสอบแบบอัตโนมัติ (Automated Testing)
+## 🧪 การทดสอบชุดคำสั่ง (Testing & Verification)
 
-โปรเจกต์มีชุดการทดสอบ Unit Tests ครอบคลุม 30 กรณีทดสอบ (Edge Cases, Negative Cases, Object Sorting, Precondition Checks):
-
+### รัน Unit Tests ทั้งหมด
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-ตัวอย่างผลการทดสอบ:
-```text
-Ran 30 tests in 0.015s
-OK
+### ตรวจสอบ Syntax และ Compilation
+```bash
+python3 -m py_compile main.py models/*.py algorithms/*.py services/*.py tests/*.py
 ```
